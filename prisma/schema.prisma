@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  username           String               @unique
+  name               String?
+  image              String?
+  submissions        Submission[]         // Fixed capitalization
+  codeQuestSolutions CodeQuestSolutions[]
+  codeQuests         CodeQuest[]         // Fixed capitalization
+  points             Int                  @default(0)  // Fixed capitalization and added default
+  leetcodeUsername   String?
+  codeforcesUsername String?
+  githubUsername     String?
+}
+
+model Problem {
+  id          String       @id @default(cuid())
+  title       String       @unique
+  description String
+  difficulty  String
+  testCases   TestCase[]
+  submissions Submission[] 
+  contest     Contest?     @relation(fields: [contestId], references: [id])
+  contestId   String?
+  points      Int?        // Fixed capitalization and type
+  solution    Solution?   // Fixed capitalization
+}
+
+model TestCase {
+  id        String  @id @default(cuid())
+  input     String
+  output    String
+  isPublic  Boolean @default(false)
+  problem   Problem @relation(fields: [problemId], references: [id])
+  problemId String
+}
+
+model Submission {
+  id         String  @id @default(cuid())
+  user       User    @relation(fields: [userId], references: [id])
+  userId     String
+  problem    Problem @relation(fields: [problemId], references: [id]) // Fixed capitalization
+  problemId  String
+  sourceCode String
+  verdict    String
+}
+
+model Contest {
+  id          String    @id @default(cuid())
+  title       String
+  banner      String
+  description String
+  startTime   DateTime
+  endTime     DateTime
+  problems    Problem[]
+}
+
+model CodeQuest {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  startTime   DateTime
+  endTime     DateTime
+  createdBy   User     @relation(fields: [userId], references: [id])
+  userId      String
+}
+
+model CodeQuestSolutions {
+  id          String @id @default(cuid())
+  gitRepoLink String @unique
+  description String
+  user        User   @relation(fields: [userId], references: [id])
+  userId      String
+}
+
+model Solution {
+  id        String  @id @default(cuid())
+  solution  String
+  problem   Problem @relation(fields: [problemId], references: [id])
+  problemId String  @unique
+}
